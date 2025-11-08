@@ -2,9 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import locale
-
-locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 
 st.set_page_config(layout="centered")
 
@@ -35,6 +32,8 @@ if archivo is None:
 df = pd.read_csv(archivo, dayfirst=True)
 df["FECHA"] = pd.to_datetime(df["FECHA"], dayfirst=True)
 df["G/A"] = df["GOLES"] + df["ASISTENCIAS"]
+
+
 
 # -------------------------------
 # Filtros generales
