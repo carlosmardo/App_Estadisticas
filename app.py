@@ -34,7 +34,7 @@ with st.expander("ℹ️ **IMPORTANTE** ¿Cómo usar la plantilla de Excel?"):
     2. **Crea una nueva hoja de cálculo en Google Sheets**.
     3. En la barra de navegación de Google Sheets, ve a **Archivo → Importar**.
     4. Se abrirá un pop-up. Dirígete a la pestaña **Subir** y agrega el archivo `.xlsx` descargado anteriormente.
-    5. ¡Listo! Ya tienes la plantilla lista para rellenar con los datos del Barça.
+    5. ¡Listo! Ya tienes la plantilla lista para rellenar con los datos del Equipo.
     6. Una vez que hayas completado la plantilla, descárgala como `.csv` desde Google Sheets, Archivo → Descargar → Valores separados por comas (.csv).
 
     💡 **Tips adicionales:**  
@@ -94,7 +94,7 @@ st.sidebar.header("Filtros generales")
 
 competiciones = sorted(df["COMPETICION"].unique())
 comp_filtro = st.sidebar.multiselect(
-    "Selecciona competiciones",
+    "Selecciona las competiciones",
     options=competiciones,
     default=competiciones
 )
@@ -106,11 +106,12 @@ df_filtrado = df[df["COMPETICION"].isin(comp_filtro)].copy()
 # ----------------------------------
 if "Liga" in comp_filtro:
     vuelta = st.sidebar.radio(
-        "Selecciona tramo de la Liga",
-        ["Toda la Liga", "Primera vuelta (1–19)", "Segunda vuelta (20–38)"],
+        "Selecciona el tramo de la Liga",
+        ["Toda la Liga", "Primera vuelta", "Segunda vuelta"],
         index=0
     )
 
+    # Ordenamos las fechas de los partidos de Liga
     liga_dates = (
         df[df["COMPETICION"] == "Liga"]
         .sort_values("FECHA")["FECHA"]
@@ -118,17 +119,30 @@ if "Liga" in comp_filtro:
         .reset_index(drop=True)
     )
 
-    date_to_jornada = {dt: i+1 for i, dt in enumerate(pd.to_datetime(liga_dates).tolist())}
+    # Número total de jornadas reales
+    total_jornadas = len(liga_dates)
 
+    # Calculamos el punto medio (mitad)
+    mitad = total_jornadas // 2  # división entera
+
+    # Creamos el mapeo FECHA → número de jornada
+    date_to_jornada = {dt: i + 1 for i, dt in enumerate(pd.to_datetime(liga_dates).tolist())}
+
+    # Añadimos columna JORNADA
     df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "JORNADA"] = (
         pd.to_datetime(df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "FECHA"])
         .map(date_to_jornada)
     )
 
-    if vuelta == "Primera vuelta (1–19)":
-        df_filtrado = df_filtrado[~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] > 19))]
-    elif vuelta == "Segunda vuelta (20–38)":
-        df_filtrado = df_filtrado[~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] <= 19))]
+    # Aplicamos el filtro dinámico
+    if vuelta == "Primera vuelta":
+        df_filtrado = df_filtrado[
+            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] > mitad))
+        ]
+    elif vuelta == "Segunda vuelta":
+        df_filtrado = df_filtrado[
+            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] <= mitad))
+        ]
 
 # -------------------------------
 # SECCIÓN 1: Estadísticas por jugador o equipo
@@ -136,7 +150,7 @@ if "Liga" in comp_filtro:
 st.header("📈 Estadísticas individuales / Equipo")
 
 opciones_jugadores = ["Equipo General"] + sorted(df["NOMBRE"].unique())
-jugador_sel = st.selectbox("Selecciona jugador o Equipo General", opciones_jugadores)
+jugador_sel = st.selectbox("Selecciona el jugador o Equipo General", opciones_jugadores)
 
 tipo_stat = st.selectbox(
     "Selecciona la estadística a mostrar",
@@ -216,13 +230,13 @@ st.header("🆚 Comparador de jugadores")
 jugadores = sorted(df["NOMBRE"].unique())
 
 jugadores_comparar = st.multiselect(
-    "Selecciona jugadores para comparar",
+    "Selecciona los jugadores a comparar",
     jugadores,
     default=[jugadores[0], jugadores[1]] if len(jugadores) > 1 else jugadores
 )
 
 tipo_comparar = st.selectbox(
-    "Selecciona la estadística para comparar",
+    "Selecciona la estadística a comparar",
     ["NOTA", "GOLES", "ASISTENCIAS", "G/A"]
 )
 
