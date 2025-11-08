@@ -22,14 +22,26 @@ st.markdown("""
 # -------------------------------
 st.title("📊 Análisis del Barça - Estadísticas por Jugador")
 
-archivo = st.file_uploader("Sube tu archivo CSV con las estadísticas", type=["csv"])
+# -------------------------------
+# Archivo CSV de ejemplo dentro del proyecto
+# -------------------------------
+archivo_ejemplo = "ejemplo.csv"
 
-if archivo is None:
-    st.warning("👆 Sube un archivo CSV para comenzar el análisis.")
-    st.stop()
+# -------------------------------
+# Subir archivo CSV del usuario
+# -------------------------------
+archivo_usuario = st.file_uploader(
+    "Sube tu archivo CSV con las estadísticas (o usa el de ejemplo)",
+    type=["csv"]
+)
 
-# Leer el CSV subido
-df = pd.read_csv(archivo, dayfirst=True)
+# Si el usuario no sube archivo, usamos el CSV de ejemplo
+if archivo_usuario is None:
+    st.info("Mostrando archivo de ejemplo. Puedes subir tu propio CSV para reemplazarlo.")
+    df = pd.read_csv(archivo_ejemplo, dayfirst=True)
+else:
+    df = pd.read_csv(archivo_usuario, dayfirst=True)
+
 df["FECHA"] = pd.to_datetime(df["FECHA"], dayfirst=True)
 df["G/A"] = df["GOLES"] + df["ASISTENCIAS"]
 
