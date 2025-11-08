@@ -42,6 +42,15 @@ if archivo_usuario is None:
 else:
     df = pd.read_csv(archivo_usuario, dayfirst=True)
 
+
+columnas_esperadas = ["FECHA","COMPETICION","NOMBRE","GOLES","ASISTENCIAS","NOTA","MINS_JUGADOS"]
+faltantes = [col for col in columnas_esperadas if col not in df.columns]
+
+if faltantes:
+    st.error(f"Archivo CSV inválido. Faltan las columnas: {', '.join(faltantes)}")
+    st.stop()
+    
+
 df["FECHA"] = pd.to_datetime(df["FECHA"], dayfirst=True)
 df["G/A"] = df["GOLES"] + df["ASISTENCIAS"]
 
