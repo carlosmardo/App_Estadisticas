@@ -20,7 +20,38 @@ st.markdown("""
 # -------------------------------
 # 📂 Subir archivo CSV
 # -------------------------------
-st.title("📊 Análisis del Barça - Estadísticas por Jugador")
+st.title("📊 Análisis del Equipo - Stats por Jugador")
+
+# ------------------------------------------
+# Botón para descargar la plantilla Excel
+# ------------------------------------------
+with st.expander("ℹ️ **IMPORTANTE** ¿Cómo usar la plantilla de Excel?"):
+    st.markdown("""
+    Para facilitar la carga de datos en la app, usa la plantilla de Excel predefinida.  
+    Sigue estos pasos:
+
+    1. **Descarga el archivo** usando el botón Descargar plantilla de Excel.
+    2. **Crea una nueva hoja de cálculo en Google Sheets**.
+    3. En la barra de navegación de Google Sheets, ve a **Archivo → Importar**.
+    4. Se abrirá un pop-up. Dirígete a la pestaña **Subir** y agrega el archivo `.xlsx` descargado anteriormente.
+    5. ¡Listo! Ya tienes la plantilla lista para rellenar con los datos del Barça.
+    6. Una vez que hayas completado la plantilla, descárgala como `.csv` desde Google Sheets, Archivo → Descargar → Valores separados por comas (.csv).
+
+    💡 **Tips adicionales:**  
+    - Puedes cambiar los nombres de los jugadores y las competiciones para adaptarlo a cualquier otro equipo.  
+    - Guarda los cambios y luego descarga como `.csv` si quieres subirlo a la app.
+    """)
+
+
+with open("Plantilla.xlsx", "rb") as f:
+    excel_bytes = f.read()
+
+st.download_button(
+    label="📥 Descargar plantilla de Excel",
+    data=excel_bytes,
+    file_name="plantilla_estadisticas.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
 
 # -------------------------------
 # Archivo CSV de ejemplo dentro del proyecto
@@ -49,7 +80,7 @@ faltantes = [col for col in columnas_esperadas if col not in df.columns]
 if faltantes:
     st.error(f"Archivo CSV inválido. Faltan las columnas: {', '.join(faltantes)}")
     st.stop()
-    
+
 
 df["FECHA"] = pd.to_datetime(df["FECHA"], dayfirst=True)
 df["G/A"] = df["GOLES"] + df["ASISTENCIAS"]
