@@ -62,7 +62,7 @@ archivo_ejemplo = "ejemplo.csv"
 # Subir archivo CSV del usuario
 # -------------------------------
 archivo_usuario = st.file_uploader(
-    "Sube tu archivo CSV con las estadísticas (o usa el de ejemplo)",
+    "Sube tu archivo CSV con las estadísticas (Ahora se esta mostrando un archivo de ejemplo)",
     type=["csv"]
 )
 
