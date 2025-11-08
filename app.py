@@ -4,10 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import locale
 
-try:
-    locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-except:
-    locale.setlocale(locale.LC_TIME, 'es_ES')  # Para Windows
+locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
 
 st.set_page_config(layout="centered")
 
