@@ -112,6 +112,18 @@ if df_filtrado.empty:
 # Filtro especial: Primera / Segunda vuelta (solo Liga)
 # ----------------------------------
 if "Liga" in comp_filtro:
+    st.sidebar.markdown("### ⚙️ Configuración de la Liga")
+
+    # 🔹 Permitir elegir el número total de jornadas
+    total_jornadas_input = st.sidebar.number_input(
+        "Número total de jornadas",
+        min_value=1,
+        max_value=60,
+        value=38,
+        step=1,
+        help="Por defecto 38 (LaLiga). Cambia este valor si tu liga tiene otro número de jornadas."
+    )
+
     vuelta = st.sidebar.radio(
         "Selecciona el tramo de la Liga",
         ["Toda la Liga", "Primera vuelta", "Segunda vuelta"],
@@ -132,17 +144,17 @@ if "Liga" in comp_filtro:
         df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "FECHA"].map(date_to_jornada)
     )
 
-    # 🔹 Si es Liga española, usamos corte fijo en jornada 19
-    # (incluso si en el CSV solo hay 10, 20 o 38 partidos)
-    corte_laliga = 19
+    # 🔹 Calculamos el corte de mitad de temporada según lo que elija el usuario
+    corte_liga = total_jornadas_input // 2
 
+    # 🔹 Aplicamos el filtro según la vuelta seleccionada
     if vuelta == "Primera vuelta":
         df_filtrado = df_filtrado[
-            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] > corte_laliga))
+            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] > corte_liga))
         ]
     elif vuelta == "Segunda vuelta":
         df_filtrado = df_filtrado[
-            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] <= corte_laliga))
+            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] <= corte_liga))
         ]
 
 
@@ -283,9 +295,9 @@ st.markdown("### 📋 Resumen de participación")
 st.dataframe(resumen_df, use_container_width=True, hide_index=True)
 
 # -------------------------------
-# SECCIÓN 3: Ranking por notas medias (ponderada por minutos)
+# SECCIÓN 3: Ranking por notas medias
 # -------------------------------
-st.header("🏆 Ranking por notas medias ponderada por minutos")
+st.header("🏆 Ranking por notas medias")
 
 media_global = df_filtrado["NOTA"].mean()
 k = 20  # constante de suavizado
