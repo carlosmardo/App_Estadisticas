@@ -101,6 +101,13 @@ comp_filtro = st.sidebar.multiselect(
 
 df_filtrado = df[df["COMPETICION"].isin(comp_filtro)].copy()
 
+if df_filtrado.empty:
+    st.warning("⚠️ Ningún filtro seleccionado o no hay datos coincidentes.\n\n"
+               "Por favor selecciona al menos **una competición** para mostrar las tablas.")
+    st.stop()
+
+    
+
 # ----------------------------------
 # Filtro especial: Primera / Segunda vuelta (solo Liga)
 # ----------------------------------
