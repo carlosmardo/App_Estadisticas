@@ -20,7 +20,7 @@ st.markdown("""
 # -------------------------------
 # 📂 Subir archivo CSV
 # -------------------------------
-st.title("📊 Análisis del Equipo - Stats por Jugador")
+st.title("📊 Análisis del Equipo y Estadísticas por Jugador según tus Notas Personales y más.")
 
 # ------------------------------------------
 # Botón para descargar la plantilla Excel
