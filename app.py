@@ -106,7 +106,7 @@ if df_filtrado.empty:
                "Por favor selecciona al menos **una competición** para mostrar las tablas.")
     st.stop()
 
-    
+
 
 # ----------------------------------
 # Filtro especial: Primera / Segunda vuelta (solo Liga)
@@ -288,13 +288,14 @@ st.markdown("### 📋 Resumen de participación")
 st.dataframe(resumen_df, use_container_width=True, hide_index=True)
 
 # -------------------------------
-# SECCIÓN 3: Ranking por notas medias
+# SECCIÓN 3: Ranking por notas medias (ponderada por minutos)
 # -------------------------------
-st.header("🏆 Ranking por notas medias")
+st.header("🏆 Ranking por notas medias ponderada por minutos")
 
 media_global = df_filtrado["NOTA"].mean()
-k = 20
+k = 20  # constante de suavizado
 
+# Agrupamos por jugador
 ranking_notas = (
     df_filtrado.groupby("NOMBRE")
     .agg({
@@ -302,10 +303,23 @@ ranking_notas = (
         "FECHA": "nunique",
         "MINS_JUGADOS": "sum"
     })
-    .rename(columns={"FECHA": "PARTIDOS_JUGADOS", "MINS_JUGADOS": "MINUTOS_TOTALES", "NOTA": "NOTA_MEDIA"})
+    .rename(columns={
+        "FECHA": "PARTIDOS_JUGADOS",
+        "MINS_JUGADOS": "MINUTOS_TOTALES",
+        "NOTA": "NOTA_MEDIA"
+    })
     .reset_index()
 )
-ranking_notas["NOTA_AJUSTADA"] = ((ranking_notas["PARTIDOS_JUGADOS"] * ranking_notas["NOTA_MEDIA"] + k * media_global) / (ranking_notas["PARTIDOS_JUGADOS"] + k)).round(2)
+
+# Calculamos el peso por minutos jugados (equivale a "partidos completos jugados")
+ranking_notas["PESO_MINUTOS"] = ranking_notas["MINUTOS_TOTALES"] / 90
+
+# Nueva Nota Ajustada ponderada por minutos
+ranking_notas["NOTA_AJUSTADA"] = (
+    (ranking_notas["PESO_MINUTOS"] * ranking_notas["NOTA_MEDIA"] + k * media_global)
+    / (ranking_notas["PESO_MINUTOS"] + k)
+).round(2)
+
 ranking_notas["NOTA_MEDIA"] = ranking_notas["NOTA_MEDIA"].round(2)
 
 # Equipo General
@@ -317,36 +331,43 @@ equipo_notas = pd.DataFrame({
     "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()]
 })
 
-# Ranking solo jugadores
+# Ordenamos por Nota Ajustada
 ranking_jugadores = ranking_notas.sort_values("NOTA_AJUSTADA", ascending=False).reset_index(drop=True)
-
-# Añadir columna POS
 ranking_jugadores.insert(0, "POS", range(1, len(ranking_jugadores)+1))
 equipo_notas.insert(0, "POS", ["-"])
 
 # Reordenar columnas
-ranking_jugadores = ranking_jugadores[["POS", "NOMBRE", "NOTA_AJUSTADA", "NOTA_MEDIA", "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"]]
-equipo_notas = equipo_notas[["POS", "NOMBRE", "NOTA_AJUSTADA", "NOTA_MEDIA", "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"]]
+ranking_jugadores = ranking_jugadores[[
+    "POS", "NOMBRE", "NOTA_AJUSTADA", "NOTA_MEDIA",
+    "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
+]]
+equipo_notas = equipo_notas[[
+    "POS", "NOMBRE", "NOTA_AJUSTADA", "NOTA_MEDIA",
+    "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
+]]
 
 st.markdown("### 🔴 Equipo General")
 st.dataframe(equipo_notas, use_container_width=True, hide_index=True)
 
 with st.expander("ℹ️ ¿Qué es la **Nota Ajustada**?"):
     st.markdown("""
-    La **Nota Ajustada** combina la media del jugador con la media global del equipo
-    para dar una visión más justa del rendimiento, especialmente cuando un jugador ha jugado pocos partidos.
+    La **Nota Ajustada** combina la media individual del jugador con la media global del equipo, 
+    ponderando además por los **minutos jugados** y los **partidos jugados**.  
+    Esto ofrece una medida más justa del rendimiento real: un jugador que haya jugado pocos minutos 
+    no se verá tan penalizado ni premiado injustamente.
 
     **Fórmula:**  
     \n
-    \t**(n × nota_jugador + k × nota_global) / (n + k)**
+    \t**(peso_minutos × nota_jugador + k × nota_global) / (peso_minutos + k)**
 
     **Donde:**  
-    - `n`: número de partidos jugados por el jugador  
-    - `k`: constante de suavizado (en este caso k = 20). Este es el número de partidos que se considera como peso mínimo teniendo en cuenta que un equipo juega alrededor de 60 partidos y un jugador que es titular indiscutible suele jugar alrededor de 50 partidos  
-    - `nota_global`: media general del equipo
+    - `peso_minutos`: minutos jugados totales ÷ 90 (equivale a partidos completos jugados)  
+    - `nota_jugador`: nota media del jugador  
+    - `nota_global`: media global del equipo  
+    - `k`: constante de suavizado (en este caso k = 20). Este es el número de partidos que se considera como peso mínimo teniendo en cuenta que un equipo juega alrededor de 60 partidos y un jugador que es titular indiscutible suele jugar alrededor de 50 partidos, equivalente a unos ~1800 minutos jugados (20×90).
     """)
 
-st.markdown("### 🔵 Jugadores (Posición ordenada según Nota Ajustada)")
+st.markdown("### 🔵 Jugadores (ordenados por Nota Ajustada ponderada por minutos)")
 altura_notas = max(400, len(ranking_jugadores) * 35 + 40)
 st.dataframe(ranking_jugadores, use_container_width=True, hide_index=True, height=altura_notas)
 
