@@ -118,7 +118,7 @@ if "Liga" in comp_filtro:
         index=0
     )
 
-    # Ordenamos las fechas de los partidos de Liga
+    # Ordenamos las fechas únicas de los partidos de Liga
     liga_dates = (
         df[df["COMPETICION"] == "Liga"]
         .sort_values("FECHA")["FECHA"]
@@ -126,30 +126,25 @@ if "Liga" in comp_filtro:
         .reset_index(drop=True)
     )
 
-    # Número total de jornadas reales
-    total_jornadas = len(liga_dates)
-
-    # Calculamos el punto medio (mitad)
-    mitad = total_jornadas // 2  # división entera
-
-    # Creamos el mapeo FECHA → número de jornada
-    date_to_jornada = {dt: i + 1 for i, dt in enumerate(pd.to_datetime(liga_dates).tolist())}
-
-    # Añadimos columna JORNADA
+    # 🔹 Asignamos número de jornada en orden cronológico
+    date_to_jornada = {fecha: i + 1 for i, fecha in enumerate(liga_dates)}
     df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "JORNADA"] = (
-        pd.to_datetime(df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "FECHA"])
-        .map(date_to_jornada)
+        df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "FECHA"].map(date_to_jornada)
     )
 
-    # Aplicamos el filtro dinámico
+    # 🔹 Si es Liga española, usamos corte fijo en jornada 19
+    # (incluso si en el CSV solo hay 10, 20 o 38 partidos)
+    corte_laliga = 19
+
     if vuelta == "Primera vuelta":
         df_filtrado = df_filtrado[
-            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] > mitad))
+            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] > corte_laliga))
         ]
     elif vuelta == "Segunda vuelta":
         df_filtrado = df_filtrado[
-            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] <= mitad))
+            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] <= corte_laliga))
         ]
+
 
 # -------------------------------
 # SECCIÓN 1: Estadísticas por jugador o equipo
