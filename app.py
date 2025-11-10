@@ -374,7 +374,7 @@ with st.expander("ℹ️ ¿Qué es la **Nota Ajustada**?"):
     - `k`: constante de suavizado (en este caso k = 20). Este es el número de partidos que se considera como peso mínimo teniendo en cuenta que un equipo juega alrededor de 60 partidos y un jugador que es titular indiscutible suele jugar alrededor de 50 partidos, equivalente a unos ~1800 minutos jugados (20×90).
     """)
 
-st.markdown("### 🔵 Jugadores (ordenados por Nota Ajustada ponderada por minutos)")
+st.markdown("### 🔵 Jugadores (Posición ordenada según Nota Ajustada)")
 altura_notas = max(400, len(ranking_jugadores) * 35 + 40)
 st.dataframe(ranking_jugadores, use_container_width=True, hide_index=True, height=altura_notas)
 
