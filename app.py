@@ -385,9 +385,9 @@ st.dataframe(pd.concat(resumen, ignore_index=True), use_container_width=True, hi
 
 
 # -------------------------------
-# SECCIÓN 3: Ranking por notas medias
+# SECCIÓN 3: Ranking por notas de rendimiento
 # -------------------------------
-st.header("🏆 Ranking por notas medias")
+st.header("🏆 Ranking por notas de rendimiento")
 media_global = df_filtrado["NOTA"].mean()
 k = 25
 
