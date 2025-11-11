@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import plotly.express as px
 
 st.set_page_config(layout="centered")
 
@@ -9,7 +8,7 @@ st.set_page_config(layout="centered")
 st.markdown("""
     <style>
         .block-container {
-            max-width: 1000px;   /* Ancho intermedio */
+            max-width: 1000px;
             padding-left: 2rem;
             padding-right: 2rem;
             margin: auto;
@@ -42,8 +41,7 @@ with st.expander("ℹ️ **IMPORTANTE** ¿Cómo usar la plantilla de Excel?"):
     - Guarda los cambios y luego descarga como `.csv` si quieres subirlo a la app.
     """)
 
-
-with open("Plantilla.xlsx", "rb") as f:
+with open("plantilla_estadisticas.xlsx", "rb") as f:
     excel_bytes = f.read()
 
 st.download_button(
@@ -54,282 +52,333 @@ st.download_button(
 )
 
 # -------------------------------
-# Archivo CSV de ejemplo dentro del proyecto
-# -------------------------------
-archivo_ejemplo = "ejemplo.csv"
-
-# -------------------------------
 # Subir archivo CSV del usuario
 # -------------------------------
 archivo_usuario = st.file_uploader(
-    "Sube tu archivo CSV con las estadísticas (Ahora se esta mostrando un archivo de ejemplo)",
+    "Sube tu archivo CSV con las estadísticas",
     type=["csv"]
 )
 
-# Si el usuario no sube archivo, usamos el CSV de ejemplo
+archivo_ejemplo = "ejemplo.csv"
 if archivo_usuario is None:
-    st.info("Mostrando archivo de ejemplo. Puedes subir tu propio CSV para reemplazarlo.")
+    st.info("Mostrando archivo de ejemplo.")
     df = pd.read_csv(archivo_ejemplo, dayfirst=True)
 else:
     df = pd.read_csv(archivo_usuario, dayfirst=True)
 
-
-columnas_esperadas = ["FECHA","COMPETICION","NOMBRE","GOLES","ASISTENCIAS","NOTA","MINS_JUGADOS"]
+# -------------------------------
+# Validación de columnas
+# -------------------------------
+columnas_esperadas = [
+    "FECHA", "COMPETICION", "NOMBRE", "GOLES", 
+    "ASISTENCIAS", "NOTA", "MINS_JUGADOS", "GOLES_EN_CONTRA", "RIVAL"
+]
 faltantes = [col for col in columnas_esperadas if col not in df.columns]
 
 if faltantes:
     st.error(f"Archivo CSV inválido. Faltan las columnas: {', '.join(faltantes)}")
     st.stop()
 
-
+# Formato de columnas
 df["FECHA"] = pd.to_datetime(df["FECHA"], dayfirst=True)
 df["G/A"] = df["GOLES"] + df["ASISTENCIAS"]
-
-
+df["DIFERENCIA_GOLES"] = df["GOLES"] - df["GOLES_EN_CONTRA"]
 
 # -------------------------------
 # Filtros generales
 # -------------------------------
 st.sidebar.header("Filtros generales")
-
 competiciones = sorted(df["COMPETICION"].unique())
 comp_filtro = st.sidebar.multiselect(
-    "Selecciona las competiciones",
-    options=competiciones,
-    default=competiciones
+    "Selecciona las competiciones", options=competiciones, default=competiciones
 )
-
 df_filtrado = df[df["COMPETICION"].isin(comp_filtro)].copy()
-
 if df_filtrado.empty:
-    st.warning("⚠️ Ningún filtro seleccionado o no hay datos coincidentes.\n\n"
-               "Por favor selecciona al menos **una competición** para mostrar las tablas.")
+    st.warning("Selecciona al menos una competición.")
     st.stop()
 
-
-
-# ----------------------------------
+# -------------------------------
 # Filtro especial: Primera / Segunda vuelta (solo Liga)
-# ----------------------------------
+# -------------------------------
 if "Liga" in comp_filtro:
     st.sidebar.markdown("### ⚙️ Configuración de la Liga")
-
-    # 🔹 Permitir elegir el número total de jornadas
     total_jornadas_input = st.sidebar.number_input(
-        "Número total de jornadas",
-        min_value=1,
-        max_value=60,
-        value=38,
-        step=1,
-        help="Por defecto 38 (LaLiga). Cambia este valor si tu liga tiene otro número de jornadas."
+        "Número total de jornadas", min_value=1, max_value=60, value=38, step=1
     )
-
     vuelta = st.sidebar.radio(
-        "Selecciona el tramo de la Liga",
-        ["Toda la Liga", "Primera vuelta", "Segunda vuelta"],
-        index=0
+        "Selecciona el tramo de la Liga", ["Toda la Liga", "Primera vuelta", "Segunda vuelta"], index=0
     )
 
-    # Ordenamos las fechas únicas de los partidos de Liga
     liga_dates = (
         df[df["COMPETICION"] == "Liga"]
         .sort_values("FECHA")["FECHA"]
         .drop_duplicates()
         .reset_index(drop=True)
     )
+    date_to_jornada = {fecha: i+1 for i, fecha in enumerate(liga_dates)}
+    df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "JORNADA"] = df_filtrado.loc[
+        df_filtrado["COMPETICION"] == "Liga", "FECHA"
+    ].map(date_to_jornada)
 
-    # 🔹 Asignamos número de jornada en orden cronológico
-    date_to_jornada = {fecha: i + 1 for i, fecha in enumerate(liga_dates)}
-    df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "JORNADA"] = (
-        df_filtrado.loc[df_filtrado["COMPETICION"] == "Liga", "FECHA"].map(date_to_jornada)
-    )
-
-    # 🔹 Calculamos el corte de mitad de temporada según lo que elija el usuario
     corte_liga = total_jornadas_input // 2
-
-    # 🔹 Aplicamos el filtro según la vuelta seleccionada
     if vuelta == "Primera vuelta":
-        df_filtrado = df_filtrado[
-            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] > corte_liga))
-        ]
+        df_filtrado = df_filtrado[~(
+            (df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] > corte_liga)
+        )]
     elif vuelta == "Segunda vuelta":
-        df_filtrado = df_filtrado[
-            ~((df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] <= corte_liga))
-        ]
-
+        df_filtrado = df_filtrado[~(
+            (df_filtrado["COMPETICION"] == "Liga") & (df_filtrado["JORNADA"] <= corte_liga)
+        )]
 
 # -------------------------------
-# SECCIÓN 1: Estadísticas por jugador o equipo
+# SECCIÓN 1: Estadísticas por jugador o equipo (hover + resumen)
 # -------------------------------
 st.header("📈 Estadísticas individuales / Equipo")
 
 opciones_jugadores = ["Equipo General"] + sorted(df["NOMBRE"].unique())
 jugador_sel = st.selectbox("Selecciona el jugador o Equipo General", opciones_jugadores)
-
-tipo_stat = st.selectbox(
-    "Selecciona la estadística a mostrar",
-    ["NOTA", "GOLES", "ASISTENCIAS", "G/A"]
-)
+tipo_stat = st.selectbox("Selecciona la estadística a mostrar", ["NOTA", "GOLES", "ASISTENCIAS", "G/A"])
 
 if jugador_sel == "Equipo General":
     df_equipo = (
-        df_filtrado.groupby(["FECHA", "COMPETICION"])
+        df_filtrado.groupby(["FECHA", "COMPETICION", "RIVAL"])
         .agg({
-            "NOTA": "mean",
-            "GOLES": "sum",
-            "ASISTENCIAS": "sum",
-            "G/A": "sum"
+            "NOTA":"mean",
+            "GOLES":"sum",
+            "ASISTENCIAS":"sum",
+            "G/A":"sum",
+            "GOLES_EN_CONTRA":"max"
         })
         .reset_index()
         .sort_values("FECHA")
     )
-
-    fig, ax = plt.subplots(figsize=(14, 6))
-    ax.plot(df_equipo["FECHA"], df_equipo[tipo_stat],
-            marker="o", markersize=6, linestyle="-", linewidth=2.5, alpha=0.8, color="royalblue")
-    ax.set_title(f"Evolución de {tipo_stat} del equipo por partido", fontsize=16)
-    ax.set_xlabel("MESES")
-    ax.set_ylabel(tipo_stat)
-    ax.grid(True, linestyle="--", alpha=0.6)
-    ax.set_facecolor("white")
-    ax.xaxis.set_major_locator(mdates.MonthLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-    plt.xticks(rotation=45)
-    st.pyplot(fig)
-
-else:
-    df_jugador = df_filtrado[df_filtrado["NOMBRE"] == jugador_sel].sort_values("FECHA")
-
-    fig, ax = plt.subplots(figsize=(14, 6))
-    ax.plot(
-        df_jugador["FECHA"], df_jugador[tipo_stat],
-        marker="o", markersize=6, linestyle="-", linewidth=2.5, alpha=0.8
-    )
-    ax.set_title(f"Evolución de {tipo_stat} partido a partido - {jugador_sel}", fontsize=16)
-    ax.set_xlabel("MESES")
-    ax.set_ylabel(tipo_stat)
-    ax.grid(True, linestyle="--", alpha=0.6)
-    ax.set_facecolor("white")
-    ax.xaxis.set_major_locator(mdates.MonthLocator())
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-    plt.xticks(rotation=45)
-    st.pyplot(fig)
-
-# Tabla resumen
-if jugador_sel == "Equipo General":
-    resumen = pd.DataFrame({
-        "NOMBRE": ["Equipo General"],
-        "PARTIDOS_JUGADOS": [df_filtrado["FECHA"].nunique()],
-        "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()]
-    })
-else:
-    df_jugador_filtrado = df_filtrado[df_filtrado["NOMBRE"] == jugador_sel]
-    partidos_jugados = df_jugador_filtrado["FECHA"].nunique()
-    minutos_totales = df_jugador_filtrado["MINS_JUGADOS"].sum()
     
-    resumen = pd.DataFrame({
-        "NOMBRE": [jugador_sel],
-        "PARTIDOS_JUGADOS": [partidos_jugados],
-        "MINUTOS_TOTALES": [minutos_totales]
-    })
+    # Redondeamos nota para hover
+    df_equipo["NOTA"] = df_equipo["NOTA"].round(2)
+    
+    hover_cols = ["COMPETICION", "RIVAL", "GOLES_EN_CONTRA", "GOLES", "ASISTENCIAS", "G/A", "NOTA"]
+    fig = px.line(df_equipo, x="FECHA", y=tipo_stat, markers=True)
+    fig.update_traces(
+        customdata=df_equipo[hover_cols].values,
+        hovertemplate=(
+            "Competición: %{customdata[0]}<br>" +
+            "Rival: %{customdata[1]}<br>" +
+            "Goles en contra: %{customdata[2]}<br>" +
+            "Goles: %{customdata[3]}<br>" +
+            "Asistencias: %{customdata[4]}<br>" +
+            "G/A: %{customdata[5]}<br>" +
+            "Nota: %{customdata[6]}"
+        )
+    )
+else:
+    df_jugador = df_filtrado[df_filtrado["NOMBRE"]==jugador_sel].sort_values("FECHA")
+    hover_cols = ["COMPETICION", "RIVAL", "GOLES_EN_CONTRA", "GOLES", "ASISTENCIAS", "G/A", "NOTA"]
+    fig = px.line(df_jugador, x="FECHA", y=tipo_stat, markers=True)
+    fig.update_traces(
+        customdata=df_jugador[hover_cols].values,
+        hovertemplate=(
+            "Competición: %{customdata[0]}<br>" +
+            "Rival: %{customdata[1]}<br>" +
+            "Goles en contra: %{customdata[2]}<br>" +
+            "Goles: %{customdata[3]}<br>" +
+            "Asistencias: %{customdata[4]}<br>" +
+            "G/A: %{customdata[5]}<br>" +
+            "Nota: %{customdata[6]}"
+        )
+    )
+
+fig.update_layout(
+    xaxis_title="MESES",
+    yaxis_title=tipo_stat,
+    hovermode="x unified"
+)
+st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------------
+# Tabla resumen con estadística seleccionada (Sección 1)
+# -------------------------------
+def calcular_por_partido(total, partidos):
+    return round(total / partidos, 2) if partidos else 0
+
+if jugador_sel == "Equipo General":
+    fila = {
+        "NOMBRE": "Equipo General",
+        "PARTIDOS_JUGADOS": df_filtrado["FECHA"].nunique(),
+        "MINUTOS_TOTALES": df_filtrado["MINS_JUGADOS"].sum()
+    }
+    partidos = fila["PARTIDOS_JUGADOS"]
+
+    if tipo_stat == "NOTA":
+        nota_media = df_filtrado["NOTA"].mean()
+        k = 25
+        media_global = df_filtrado["NOTA"].mean()
+        nota_ajustada = ((df_filtrado["MINS_JUGADOS"].sum()/90*nota_media + k*media_global) / ((df_filtrado["MINS_JUGADOS"].sum()/90)+k))
+        fila.update({"NOTA_AJUSTADA": round(nota_ajustada,2), "NOTA_MEDIA": round(nota_media,2)})
+        columnas = ["NOMBRE","NOTA_AJUSTADA","NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_stat == "GOLES":
+        total = df_filtrado["GOLES"].sum()
+        goles_en_contra_total = df_filtrado[["FECHA","GOLES_EN_CONTRA"]].drop_duplicates()["GOLES_EN_CONTRA"].sum()
+        diferencia_total = total - goles_en_contra_total
+        fila.update({"GOLES": total, "GOLES_EN_CONTRA": goles_en_contra_total, "DIFERENCIA_GOLES": diferencia_total})
+        fila["GOLES_POR_PARTIDO"] = calcular_por_partido(total, partidos)
+        columnas = ["NOMBRE","GOLES","GOLES_POR_PARTIDO","GOLES_EN_CONTRA","DIFERENCIA_GOLES","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_stat == "ASISTENCIAS":
+        total = df_filtrado["ASISTENCIAS"].sum()
+        fila.update({"ASISTENCIAS": total, "ASISTENCIAS_POR_PARTIDO": calcular_por_partido(total, partidos)})
+        columnas = ["NOMBRE","ASISTENCIAS","ASISTENCIAS_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_stat == "G/A":
+        total = df_filtrado["G/A"].sum()
+        fila.update({"G/A": total, "G/A_POR_PARTIDO": calcular_por_partido(total, partidos)})
+        columnas = ["NOMBRE","G/A","G/A_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    resumen = pd.DataFrame([fila])[columnas]
+
+else:
+    df_j = df_filtrado[df_filtrado["NOMBRE"]==jugador_sel]
+    fila = {
+        "NOMBRE": jugador_sel,
+        "PARTIDOS_JUGADOS": df_j["FECHA"].nunique(),
+        "MINUTOS_TOTALES": df_j["MINS_JUGADOS"].sum()
+    }
+    partidos = fila["PARTIDOS_JUGADOS"]
+
+    if tipo_stat == "NOTA":
+        nota_media = df_j["NOTA"].mean()
+        k = 25
+        media_global = df_filtrado["NOTA"].mean()
+        nota_ajustada = ((df_j["MINS_JUGADOS"].sum()/90*nota_media + k*media_global) / ((df_j["MINS_JUGADOS"].sum()/90)+k))
+        fila.update({"NOTA_AJUSTADA": round(nota_ajustada,2), "NOTA_MEDIA": round(nota_media,2)})
+        columnas = ["NOMBRE","NOTA_AJUSTADA","NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_stat == "GOLES":
+        total = df_j["GOLES"].sum()
+        fila.update({"GOLES": total, "GOLES_POR_PARTIDO": calcular_por_partido(total, partidos)})
+        columnas = ["NOMBRE","GOLES","GOLES_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_stat == "ASISTENCIAS":
+        total = df_j["ASISTENCIAS"].sum()
+        fila.update({"ASISTENCIAS": total, "ASISTENCIAS_POR_PARTIDO": calcular_por_partido(total, partidos)})
+        columnas = ["NOMBRE","ASISTENCIAS","ASISTENCIAS_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_stat == "G/A":
+        total = df_j["G/A"].sum()
+        fila.update({"G/A": total, "G/A_POR_PARTIDO": calcular_por_partido(total, partidos)})
+        columnas = ["NOMBRE","G/A","G/A_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    resumen = pd.DataFrame([fila])[columnas]
 
 st.markdown("### 📋 Resumen de participación")
 st.dataframe(resumen, use_container_width=True, hide_index=True)
 
+
 # -------------------------------
-# SECCIÓN 2: Comparador de jugadores
+# SECCIÓN 2: Comparador de jugadores (hover + resumen)
 # -------------------------------
 st.header("🆚 Comparador de jugadores")
 
 jugadores = sorted(df["NOMBRE"].unique())
-
 jugadores_comparar = st.multiselect(
     "Selecciona los jugadores a comparar",
     jugadores,
     default=[jugadores[0], jugadores[1]] if len(jugadores) > 1 else jugadores
 )
+tipo_comparar = st.selectbox("Selecciona la estadística a comparar", ["NOTA","GOLES","ASISTENCIAS","G/A"])
 
-tipo_comparar = st.selectbox(
-    "Selecciona la estadística a comparar",
-    ["NOTA", "GOLES", "ASISTENCIAS", "G/A"]
-)
-
-fig2, ax2 = plt.subplots(figsize=(14, 6))
+fig2 = px.line()
 for j in jugadores_comparar:
     df_temp = df_filtrado[df_filtrado["NOMBRE"] == j].sort_values("FECHA")
-    ax2.plot(
-        df_temp["FECHA"],
-        df_temp[tipo_comparar],
-        marker="o",
-        linestyle="-",
-        linewidth=2,
-        label=j
+    hover_cols = ["COMPETICION", "RIVAL", "GOLES_EN_CONTRA", "GOLES", "ASISTENCIAS", "G/A", "NOTA"]
+    fig2.add_scatter(
+        x=df_temp["FECHA"],
+        y=df_temp[tipo_comparar],
+        mode='lines+markers',
+        name=j,
+        hovertemplate=(
+            "Competición: %{customdata[0]}<br>" +
+            "Rival: %{customdata[1]}<br>" +
+            "Goles en contra: %{customdata[2]}<br>" +
+            "Goles: %{customdata[3]}<br>" +
+            "Asistencias: %{customdata[4]}<br>" +
+            "G/A: %{customdata[5]}<br>" +
+            "Nota: %{customdata[6]}"
+        ),
+        customdata=df_temp[hover_cols].values
     )
 
-ax2.set_title(f"Comparativa de {tipo_comparar} entre jugadores", fontsize=16)
-ax2.set_xlabel("MESES")
-ax2.set_ylabel(tipo_comparar)
-ax2.grid(True, linestyle="--", alpha=0.6)
-ax2.set_facecolor("white")
-ax2.legend()
-ax2.xaxis.set_major_locator(mdates.MonthLocator())
-ax2.xaxis.set_major_formatter(mdates.DateFormatter('%b %Y'))
-plt.xticks(rotation=45)
-st.pyplot(fig2)
+fig2.update_layout(
+    title=f"Comparativa de {tipo_comparar} entre jugadores",
+    xaxis_title="MESES",
+    yaxis_title=tipo_comparar,
+    hovermode="x unified"
+)
+st.plotly_chart(fig2, use_container_width=True)
 
-# Tabla resumen
+# -------------------------------
+# Tabla resumen comparativa con estadística seleccionada (Sección 2)
+# -------------------------------
 resumen = []
 for jugador in jugadores_comparar:
     df_j = df_filtrado[df_filtrado["NOMBRE"] == jugador]
-    partidos_jugados = df_j["FECHA"].nunique()
-    minutos_totales = df_j["MINS_JUGADOS"].sum()
-    
-    resumen.append({
+    partidos = df_j["FECHA"].nunique()
+    fila = {
         "NOMBRE": jugador,
-        "PARTIDOS_JUGADOS": partidos_jugados,
-        "MINUTOS_TOTALES": minutos_totales
-    })
+        "PARTIDOS_JUGADOS": partidos,
+        "MINUTOS_TOTALES": df_j["MINS_JUGADOS"].sum()
+    }
 
-resumen_df = pd.DataFrame(resumen)
+    if tipo_comparar == "NOTA":
+        nota_media = df_j["NOTA"].mean()
+        k = 25
+        media_global = df_filtrado["NOTA"].mean()
+        nota_ajustada = ((df_j["MINS_JUGADOS"].sum()/90*nota_media + k*media_global) / ((df_j["MINS_JUGADOS"].sum()/90)+k))
+        fila.update({"NOTA_AJUSTADA": round(nota_ajustada,2), "NOTA_MEDIA": round(nota_media,2)})
+        columnas = ["NOMBRE","NOTA_AJUSTADA","NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_comparar == "GOLES":
+        total = df_j["GOLES"].sum()
+        fila.update({"GOLES": total, "GOLES_POR_PARTIDO": calcular_por_partido(total, partidos)})
+        columnas = ["NOMBRE","GOLES","GOLES_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_comparar == "ASISTENCIAS":
+        total = df_j["ASISTENCIAS"].sum()
+        fila.update({"ASISTENCIAS": total, "ASISTENCIAS_POR_PARTIDO": calcular_por_partido(total, partidos)})
+        columnas = ["NOMBRE","ASISTENCIAS","ASISTENCIAS_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    elif tipo_comparar == "G/A":
+        total = df_j["G/A"].sum()
+        fila.update({"G/A": total, "G/A_POR_PARTIDO": calcular_por_partido(total, partidos)})
+        columnas = ["NOMBRE","G/A","G/A_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+
+    resumen.append(pd.DataFrame([fila])[columnas])
+
 st.markdown("### 📋 Resumen de participación")
-st.dataframe(resumen_df, use_container_width=True, hide_index=True)
+st.dataframe(pd.concat(resumen, ignore_index=True), use_container_width=True, hide_index=True)
+
+
 
 # -------------------------------
 # SECCIÓN 3: Ranking por notas medias
 # -------------------------------
 st.header("🏆 Ranking por notas medias")
-
 media_global = df_filtrado["NOTA"].mean()
-k = 20  # constante de suavizado
+k = 25
 
-# Agrupamos por jugador
 ranking_notas = (
     df_filtrado.groupby("NOMBRE")
-    .agg({
-        "NOTA": "mean",
-        "FECHA": "nunique",
-        "MINS_JUGADOS": "sum"
-    })
-    .rename(columns={
-        "FECHA": "PARTIDOS_JUGADOS",
-        "MINS_JUGADOS": "MINUTOS_TOTALES",
-        "NOTA": "NOTA_MEDIA"
-    })
+    .agg({"NOTA":"mean","FECHA":"nunique","MINS_JUGADOS":"sum"})
+    .rename(columns={"FECHA":"PARTIDOS_JUGADOS","MINS_JUGADOS":"MINUTOS_TOTALES","NOTA":"NOTA_MEDIA"})
     .reset_index()
 )
-
-# Calculamos el peso por minutos jugados (equivale a "partidos completos jugados")
 ranking_notas["PESO_MINUTOS"] = ranking_notas["MINUTOS_TOTALES"] / 90
-
-# Nueva Nota Ajustada ponderada por minutos
 ranking_notas["NOTA_AJUSTADA"] = (
-    (ranking_notas["PESO_MINUTOS"] * ranking_notas["NOTA_MEDIA"] + k * media_global)
-    / (ranking_notas["PESO_MINUTOS"] + k)
+    (ranking_notas["PESO_MINUTOS"]*ranking_notas["NOTA_MEDIA"] + k*media_global) /
+    (ranking_notas["PESO_MINUTOS"] + k)
 ).round(2)
-
 ranking_notas["NOTA_MEDIA"] = ranking_notas["NOTA_MEDIA"].round(2)
 
-# Equipo General
 equipo_notas = pd.DataFrame({
     "NOMBRE": ["Equipo General"],
     "NOTA_MEDIA": [df_filtrado["NOTA"].mean().round(2)],
@@ -338,12 +387,10 @@ equipo_notas = pd.DataFrame({
     "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()]
 })
 
-# Ordenamos por Nota Ajustada
 ranking_jugadores = ranking_notas.sort_values("NOTA_AJUSTADA", ascending=False).reset_index(drop=True)
 ranking_jugadores.insert(0, "POS", range(1, len(ranking_jugadores)+1))
 equipo_notas.insert(0, "POS", ["-"])
 
-# Reordenar columnas
 ranking_jugadores = ranking_jugadores[[
     "POS", "NOMBRE", "NOTA_AJUSTADA", "NOTA_MEDIA",
     "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
@@ -371,18 +418,23 @@ with st.expander("ℹ️ ¿Qué es la **Nota Ajustada**?"):
     - `peso_minutos`: minutos jugados totales ÷ 90 (equivale a partidos completos jugados)  
     - `nota_jugador`: nota media del jugador  
     - `nota_global`: media global del equipo  
-    - `k`: constante de suavizado (en este caso k = 20). Este es el número de partidos que se considera como peso mínimo teniendo en cuenta que un equipo juega alrededor de 60 partidos y un jugador que es titular indiscutible suele jugar alrededor de 50 partidos, equivalente a unos ~1800 minutos jugados (20×90).
+    - `k`: constante de suavizado (en este caso k = 25). Este es el número de partidos que se considera como peso mínimo teniendo en cuenta que un equipo juega alrededor de 60 partidos y un jugador que es titular indiscutible suele jugar alrededor de 50 partidos, equivalente a unos ~2250 minutos jugados (25×90).
     """)
 
 st.markdown("### 🔵 Jugadores (Posición ordenada según Nota Ajustada)")
-altura_notas = max(400, len(ranking_jugadores) * 35 + 40)
-st.dataframe(ranking_jugadores, use_container_width=True, hide_index=True, height=altura_notas)
+st.dataframe(
+    ranking_jugadores,
+    use_container_width=True,
+    hide_index=True,
+    height=max(400, len(ranking_jugadores)*35+40)
+)
 
 # -------------------------------
-# SECCIÓN 4: Ranking ofensivo
+# SECCIÓN 4: Ranking ofensivo (corregido y bonito)
 # -------------------------------
 st.header("⚽ Ranking de rendimiento ofensivo")
 
+# Ranking individual de jugadores
 ranking_ofensivo = (
     df_filtrado.groupby("NOMBRE")
     .agg({
@@ -399,17 +451,25 @@ ranking_ofensivo["GOLES_POR_PARTIDO"] = (ranking_ofensivo["GOLES"] / ranking_ofe
 ranking_ofensivo["ASISTENCIAS_POR_PARTIDO"] = (ranking_ofensivo["ASISTENCIAS"] / ranking_ofensivo["PARTIDOS_JUGADOS"]).round(2)
 ranking_ofensivo["G/A_POR_PARTIDO"] = (ranking_ofensivo["G/A"] / ranking_ofensivo["PARTIDOS_JUGADOS"]).round(2)
 
-# Ranking solo jugadores
+# Ordenamos jugadores por G/A
 ranking_jugadores_of = ranking_ofensivo.sort_values("G/A", ascending=False).reset_index(drop=True)
 ranking_jugadores_of.insert(0, "POS", range(1, len(ranking_jugadores_of)+1))
 
+# -----------------------
 # Equipo General
+# -----------------------
+partidos = df_filtrado[["FECHA", "GOLES_EN_CONTRA"]].drop_duplicates()
+goles_en_contra_total = partidos["GOLES_EN_CONTRA"].sum()
+diferencia_total = df_filtrado["GOLES"].sum() - goles_en_contra_total
+
 equipo_of = pd.DataFrame({
     "POS": ["-"],
     "NOMBRE": ["Equipo General"],
     "G/A": [df_filtrado["G/A"].sum()],
     "GOLES": [df_filtrado["GOLES"].sum()],
     "ASISTENCIAS": [df_filtrado["ASISTENCIAS"].sum()],
+    "GOLES_EN_CONTRA": [goles_en_contra_total],
+    "DIFERENCIA_GOLES": [diferencia_total],
     "GOLES_POR_PARTIDO": [(df_filtrado["GOLES"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
     "ASISTENCIAS_POR_PARTIDO": [(df_filtrado["ASISTENCIAS"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
     "G/A_POR_PARTIDO": [(df_filtrado["G/A"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
@@ -417,16 +477,20 @@ equipo_of = pd.DataFrame({
     "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()]
 })
 
-# Reordenar columnas
 ranking_jugadores_of = ranking_jugadores_of[[
     "POS", "NOMBRE", "G/A", "GOLES", "ASISTENCIAS",
     "GOLES_POR_PARTIDO", "ASISTENCIAS_POR_PARTIDO", "G/A_POR_PARTIDO",
     "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
 ]]
 
+# Mostrar tablas
 st.markdown("### 🔴 Equipo General")
 st.dataframe(equipo_of, use_container_width=True, hide_index=True)
 
 st.markdown("### 🔵 Jugadores (Posición ordenada según el G/A)")
-altura_ofensivo = max(400, len(ranking_jugadores_of) * 35 + 40)
-st.dataframe(ranking_jugadores_of, use_container_width=True, hide_index=True, height=altura_ofensivo)
+st.dataframe(
+    ranking_jugadores_of,
+    use_container_width=True,
+    hide_index=True,
+    height=max(400, len(ranking_jugadores_of)*35+40)
+)
