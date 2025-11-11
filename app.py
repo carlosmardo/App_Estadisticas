@@ -4,6 +4,27 @@ import plotly.express as px
 
 st.set_page_config(layout="centered")
 
+#Explicación de la Nota Ajustada
+@st.dialog("ℹ️ ¿Qué es la Nota Ajustada?", width = "medium")
+def mostrar_explicacion_nota_ajustada():
+    st.markdown("""
+    La **Nota Ajustada** combina la media individual del jugador con la media global del equipo, 
+    ponderando además por los **minutos jugados** y los **partidos jugados**.  
+    Esto ofrece una medida más justa del rendimiento real: un jugador que haya jugado pocos minutos 
+    no se verá tan penalizado ni premiado injustamente.
+
+    **Fórmula:**  
+    \n
+    \t**(peso_minutos × nota_jugador + k × nota_global) / (peso_minutos + k)**
+
+    **Donde:**  
+    - `peso_minutos`: minutos jugados totales ÷ 90 (equivale a partidos completos jugados)  
+    - `nota_jugador`: nota media del jugador  
+    - `nota_global`: media global del equipo  
+    - `k`: constante de suavizado (en este caso k = 25). Este es el número de partidos que se considera como peso mínimo teniendo en cuenta que un equipo juega alrededor de 60 partidos y un jugador que es titular indiscutible suele jugar alrededor de 50 partidos, equivalente a unos ~2250 minutos jugados (25×90).
+    """)
+
+
 # 🔹 Ajustar el ancho del contenido principal
 st.markdown("""
     <style>
@@ -101,7 +122,7 @@ if df_filtrado.empty:
 # Filtro especial: Primera / Segunda vuelta (solo Liga)
 # -------------------------------
 if "Liga" in comp_filtro:
-    st.sidebar.markdown("### ⚙️ Configuración de la Liga")
+    st.sidebar.markdown("### ⚙️ Configuración de la Liga", help="Por defecto es 38 (LaLiga). Cambia este valor si tu liga tiene otro número de jornadas.")
     total_jornadas_input = st.sidebar.number_input(
         "Número total de jornadas", min_value=1, max_value=60, value=38, step=1
     )
@@ -270,8 +291,11 @@ else:
 
     resumen = pd.DataFrame([fila])[columnas]
 
+# Encabezado con enlace informativo
 st.markdown("### 📋 Resumen de participación")
+st.button("ℹ️ ¿Qué es la Nota Ajustada?", on_click=mostrar_explicacion_nota_ajustada, key="nota_ajustada_btn")
 st.dataframe(resumen, use_container_width=True, hide_index=True)
+
 
 
 # -------------------------------
@@ -355,6 +379,7 @@ for jugador in jugadores_comparar:
     resumen.append(pd.DataFrame([fila])[columnas])
 
 st.markdown("### 📋 Resumen de participación")
+st.button("ℹ️ ¿Qué es la Nota Ajustada?", on_click=mostrar_explicacion_nota_ajustada, key="nota_ajustada_btn2")
 st.dataframe(pd.concat(resumen, ignore_index=True), use_container_width=True, hide_index=True)
 
 
@@ -403,23 +428,7 @@ equipo_notas = equipo_notas[[
 st.markdown("### 🔴 Equipo General")
 st.dataframe(equipo_notas, use_container_width=True, hide_index=True)
 
-with st.expander("ℹ️ ¿Qué es la **Nota Ajustada**?"):
-    st.markdown("""
-    La **Nota Ajustada** combina la media individual del jugador con la media global del equipo, 
-    ponderando además por los **minutos jugados** y los **partidos jugados**.  
-    Esto ofrece una medida más justa del rendimiento real: un jugador que haya jugado pocos minutos 
-    no se verá tan penalizado ni premiado injustamente.
-
-    **Fórmula:**  
-    \n
-    \t**(peso_minutos × nota_jugador + k × nota_global) / (peso_minutos + k)**
-
-    **Donde:**  
-    - `peso_minutos`: minutos jugados totales ÷ 90 (equivale a partidos completos jugados)  
-    - `nota_jugador`: nota media del jugador  
-    - `nota_global`: media global del equipo  
-    - `k`: constante de suavizado (en este caso k = 25). Este es el número de partidos que se considera como peso mínimo teniendo en cuenta que un equipo juega alrededor de 60 partidos y un jugador que es titular indiscutible suele jugar alrededor de 50 partidos, equivalente a unos ~2250 minutos jugados (25×90).
-    """)
+st.button("ℹ️ ¿Qué es la Nota Ajustada?", on_click=mostrar_explicacion_nota_ajustada, key="nota_ajustada_btn3")
 
 st.markdown("### 🔵 Jugadores (Posición ordenada según Nota Ajustada)")
 st.dataframe(
