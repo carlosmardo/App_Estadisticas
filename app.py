@@ -53,7 +53,7 @@ def mostrar_explicacion_nota_ajustada():
     ### 🎯 Interpretación
 
     - Un jugador con una nota media ligeramente inferior, pero muchos más minutos,  
-      puede superar a otro más brillante pero irregular.  
+      puede superar a otro con más media pero que haya jugado menos partidos.  
     - Un jugador con pocos minutos **no queda penalizado de forma extrema**,  
       pero su impacto en la temporada será menor.  
     - En resumen: **la fórmula recompensa la constancia y el rendimiento sostenido**.
