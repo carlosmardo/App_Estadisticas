@@ -19,15 +19,15 @@ def mostrar_explicacion_nota_ajustada():
 
     **1️⃣ Base ponderada:**
     \n
-    \t**BASE = (PESO_MINUTOS × NOTA_MEDIA + k × NOTA_GLOBAL) / (PESO_MINUTOS + k)**
+    \tBASE = (PESO_MINUTOS × NOTA_MEDIA + k × NOTA_GLOBAL) / (PESO_MINUTOS + k)
 
     **2️⃣ Bonus por minutos jugados:**
     \n
-    \t**BONUS = γ × (MINUTOS_TOTALES / MINUTOS_MÁXIMO) ^ β**
+    \tBONUS = γ × (MINUTOS_TOTALES / MINUTOS_MÁXIMO) ^ β
 
     **3️⃣ Nota final:**
     \n
-    \t**NOTA_AJUSTADA = BASE + BONUS**
+    \tNOTA_AJUSTADA = BASE + BONUS
 
     ---
 
