@@ -5,23 +5,50 @@ import plotly.express as px
 st.set_page_config(layout="centered")
 
 #Explicación de la Nota Ajustada
-@st.dialog("ℹ️ ¿Qué es la Nota Ajustada?", width = "medium")
+@st.dialog("ℹ️ ¿Qué es la Nota Ajustada?", width="medium")
 def mostrar_explicacion_nota_ajustada():
     st.markdown("""
-    La **Nota Ajustada** combina la media individual del jugador con la media global del equipo, 
-    ponderando además por los **minutos jugados** y los **partidos jugados**.  
-    Esto ofrece una medida más justa del rendimiento real: un jugador que haya jugado pocos minutos 
-    no se verá tan penalizado ni premiado injustamente.
+    La **Nota Ajustada** busca reflejar de manera más justa el **rendimiento real** de cada jugador a lo largo de la temporada.  
+    Tiene en cuenta tanto su **nota media individual** como el **volumen de minutos jugados**, premiando la **regularidad y constancia**.
 
-    **Fórmula:**  
+    ---
+    ### ⚙️ Cómo se calcula
+
+    La nota ajustada se compone de dos partes: una **base ponderada** y un **bonus por minutos**.
+
+    **1️⃣ Base ponderada:**
     \n
-    \t**(peso_minutos × nota_jugador + k × nota_global) / (peso_minutos + k)**
+    \t**BASE = (PESO_MINUTOS × NOTA_MEDIA + k × NOTA_GLOBAL) / (PESO_MINUTOS + k)**
 
-    **Donde:**  
-    - `peso_minutos`: minutos jugados totales ÷ 90 (equivale a partidos completos jugados)  
-    - `nota_jugador`: nota media del jugador  
-    - `nota_global`: media global del equipo  
-    - `k`: constante de suavizado (en este caso k = 25). Este es el número de partidos que se considera como peso mínimo teniendo en cuenta que un equipo juega alrededor de 60 partidos y un jugador que es titular indiscutible suele jugar alrededor de 50 partidos, equivalente a unos ~2250 minutos jugados (25×90).
+    **2️⃣ Bonus por minutos jugados:**
+    \n
+    \t**BONUS = γ × (MINUTOS_TOTALES / MINUTOS_MÁXIMO) ^ β**
+
+    **3️⃣ Nota final:**
+    \n
+    \t**NOTA_AJUSTADA = BASE + BONUS**
+
+    ---
+    ### 📘 Significado de los parámetros
+
+    - **NOTA_MEDIA:** la media de las notas del jugador en todos los partidos jugados.  
+    - **NOTA_GLOBAL:** media general de todos los jugadores del equipo (sirve de referencia).  
+    - **PESO_MINUTOS:** equivale a los partidos completos jugados, elevado a una potencia `α` para dar más importancia a quienes acumulan más tiempo.  
+      - En este caso, `α = 2`, lo que **aumenta exponencialmente el peso de los jugadores más regulares**.  
+    - **k = 60:** controla cuánto se suaviza el resultado hacia la nota global (cuanto mayor sea, menos diferencia entre jugadores).  
+    - **γ (gamma) = 0.25:** define la **intensidad del bonus** por minutos jugados.  
+    - **β (beta) = 2:** controla la **curvatura del bonus**, haciendo que el efecto crezca más rápido con muchos minutos.
+
+    ---
+    ### 🎯 Interpretación
+    - Un jugador con una **nota media ligeramente inferior**, pero **muchos más minutos**, puede superar a otro más brillante pero irregular.  
+    - Un jugador con pocos minutos no queda tan penalizado, pero su peso en la temporada será menor.  
+    - En resumen: **recompensa la constancia y el rendimiento sostenido**.
+
+    ---
+    ### 🧮 Ejemplo simplificado
+    Si dos defensas tienen notas medias similares (7.6 y 7.5), pero uno ha jugado 1000 minutos más,  
+    la fórmula eleva su nota ajustada final reflejando mejor su **impacto global en la temporada**.
     """)
 
 
@@ -231,11 +258,11 @@ if jugador_sel == "Equipo General":
 
     if tipo_stat == "NOTA":
         nota_media = df_filtrado["NOTA"].mean()
-        k = 25
+        
         media_global = df_filtrado["NOTA"].mean()
-        nota_ajustada = ((df_filtrado["MINS_JUGADOS"].sum()/90*nota_media + k*media_global) / ((df_filtrado["MINS_JUGADOS"].sum()/90)+k))
-        fila.update({"NOTA_AJUSTADA": round(nota_ajustada,2), "NOTA_MEDIA": round(nota_media,2)})
-        columnas = ["NOMBRE","NOTA_AJUSTADA","NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        
+        fila.update({"NOTA_MEDIA": round(nota_media,2)})
+        columnas = ["NOMBRE", "NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
 
     elif tipo_stat == "GOLES":
         total = df_filtrado["GOLES"].sum()
@@ -268,11 +295,11 @@ else:
 
     if tipo_stat == "NOTA":
         nota_media = df_j["NOTA"].mean()
-        k = 25
+        
         media_global = df_filtrado["NOTA"].mean()
-        nota_ajustada = ((df_j["MINS_JUGADOS"].sum()/90*nota_media + k*media_global) / ((df_j["MINS_JUGADOS"].sum()/90)+k))
-        fila.update({"NOTA_AJUSTADA": round(nota_ajustada,2), "NOTA_MEDIA": round(nota_media,2)})
-        columnas = ["NOMBRE","NOTA_AJUSTADA","NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        
+        fila.update({"NOTA_MEDIA": round(nota_media,2)})
+        columnas = ["NOMBRE", "NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
 
     elif tipo_stat == "GOLES":
         total = df_j["GOLES"].sum()
@@ -293,7 +320,7 @@ else:
 
 # Encabezado con enlace informativo
 st.markdown("### 📋 Resumen de participación")
-st.button("ℹ️ ¿Qué es la Nota Ajustada?", on_click=mostrar_explicacion_nota_ajustada, key="nota_ajustada_btn")
+
 st.dataframe(resumen, use_container_width=True, hide_index=True)
 
 
@@ -355,11 +382,11 @@ for jugador in jugadores_comparar:
 
     if tipo_comparar == "NOTA":
         nota_media = df_j["NOTA"].mean()
-        k = 25
+        
         media_global = df_filtrado["NOTA"].mean()
-        nota_ajustada = ((df_j["MINS_JUGADOS"].sum()/90*nota_media + k*media_global) / ((df_j["MINS_JUGADOS"].sum()/90)+k))
-        fila.update({"NOTA_AJUSTADA": round(nota_ajustada,2), "NOTA_MEDIA": round(nota_media,2)})
-        columnas = ["NOMBRE","NOTA_AJUSTADA","NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        
+        fila.update({"NOTA_MEDIA": round(nota_media,2)})
+        columnas = ["NOMBRE", "NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
 
     elif tipo_comparar == "GOLES":
         total = df_j["GOLES"].sum()
@@ -379,43 +406,76 @@ for jugador in jugadores_comparar:
     resumen.append(pd.DataFrame([fila])[columnas])
 
 st.markdown("### 📋 Resumen de participación")
-st.button("ℹ️ ¿Qué es la Nota Ajustada?", on_click=mostrar_explicacion_nota_ajustada, key="nota_ajustada_btn2")
+
 st.dataframe(pd.concat(resumen, ignore_index=True), use_container_width=True, hide_index=True)
 
 
 
 # -------------------------------
-# SECCIÓN 3: Ranking por notas de rendimiento
+# SECCIÓN 3: Ranking por notas de rendimiento (versión mejorada)
 # -------------------------------
 st.header("🏆 Ranking por notas de rendimiento")
-media_global = df_filtrado["NOTA"].mean()
-k = 25
 
+# Parámetros de la fórmula ajustable
+alpha = 2    # Potencia para peso de minutos
+k = 60       # Suavizado hacia la nota global
+gamma = .25  # Intensidad del bonus por minutos
+beta = 2     # Curvatura del bonus
+media_global = df_filtrado["NOTA"].mean()
+
+# Agrupamos datos base por jugador
 ranking_notas = (
     df_filtrado.groupby("NOMBRE")
-    .agg({"NOTA":"mean","FECHA":"nunique","MINS_JUGADOS":"sum"})
-    .rename(columns={"FECHA":"PARTIDOS_JUGADOS","MINS_JUGADOS":"MINUTOS_TOTALES","NOTA":"NOTA_MEDIA"})
+    .agg({"NOTA": "mean", "FECHA": "nunique", "MINS_JUGADOS": "sum"})
+    .rename(columns={
+        "FECHA": "PARTIDOS_JUGADOS",
+        "MINS_JUGADOS": "MINUTOS_TOTALES",
+        "NOTA": "NOTA_MEDIA"
+    })
     .reset_index()
 )
-ranking_notas["PESO_MINUTOS"] = ranking_notas["MINUTOS_TOTALES"] / 90
-ranking_notas["NOTA_AJUSTADA"] = (
-    (ranking_notas["PESO_MINUTOS"]*ranking_notas["NOTA_MEDIA"] + k*media_global) /
-    (ranking_notas["PESO_MINUTOS"] + k)
-).round(2)
+
+# Calculamos máximo de minutos para normalizar el bonus
+minutos_max = ranking_notas["MINUTOS_TOTALES"].replace(0, 1).max()
+
+# Paso 1: peso no lineal por minutos (partidos equivalentes ^ alpha)
+ranking_notas["PESO_MINUTOS"] = (ranking_notas["MINUTOS_TOTALES"] / 90.0) ** alpha
+
+# Paso 2: base ponderada entre nota del jugador y media global
+ranking_notas["BASE"] = (
+    (ranking_notas["PESO_MINUTOS"] * ranking_notas["NOTA_MEDIA"] + k * media_global)
+    / (ranking_notas["PESO_MINUTOS"] + k)
+)
+
+# Paso 3: bonus por minutos jugados (normalizado respecto al máximo)
+ranking_notas["BONUS"] = gamma * (ranking_notas["MINUTOS_TOTALES"] / minutos_max) ** beta
+
+# Paso 4: nota ajustada final
+ranking_notas["NOTA_AJUSTADA"] = (ranking_notas["BASE"] + ranking_notas["BONUS"]).round(2)
 ranking_notas["NOTA_MEDIA"] = ranking_notas["NOTA_MEDIA"].round(2)
+
+# -------------------------------
+# Equipo general
+# -------------------------------
+nota_ajustada_equipo = ranking_notas["NOTA_AJUSTADA"].mean().round(2)
+nota_media_equipo = ranking_notas["NOTA_MEDIA"].mean().round(2)
 
 equipo_notas = pd.DataFrame({
     "NOMBRE": ["Equipo General"],
-    "NOTA_MEDIA": [df_filtrado["NOTA"].mean().round(2)],
-    "NOTA_AJUSTADA": [df_filtrado["NOTA"].mean().round(2)],
+    "NOTA_MEDIA": [nota_media_equipo],
+    "NOTA_AJUSTADA": [nota_ajustada_equipo],
     "PARTIDOS_JUGADOS": [df_filtrado["FECHA"].nunique()],
     "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()]
 })
 
+# -------------------------------
+# Ranking final de jugadores
+# -------------------------------
 ranking_jugadores = ranking_notas.sort_values("NOTA_AJUSTADA", ascending=False).reset_index(drop=True)
-ranking_jugadores.insert(0, "POS", range(1, len(ranking_jugadores)+1))
+ranking_jugadores.insert(0, "POS", range(1, len(ranking_jugadores) + 1))
 equipo_notas.insert(0, "POS", ["-"])
 
+# Reordenar columnas para mostrar
 ranking_jugadores = ranking_jugadores[[
     "POS", "NOMBRE", "NOTA_AJUSTADA", "NOTA_MEDIA",
     "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
@@ -425,6 +485,9 @@ equipo_notas = equipo_notas[[
     "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
 ]]
 
+# -------------------------------
+# Mostrar resultados
+# -------------------------------
 st.markdown("### 🔴 Equipo General")
 st.dataframe(equipo_notas, use_container_width=True, hide_index=True)
 
@@ -437,6 +500,7 @@ st.dataframe(
     hide_index=True,
     height=max(400, len(ranking_jugadores)*35+40)
 )
+
 
 # -------------------------------
 # SECCIÓN 4: Ranking ofensivo (corregido y bonito)
