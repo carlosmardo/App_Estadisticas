@@ -8,47 +8,58 @@ st.set_page_config(layout="centered")
 @st.dialog("ℹ️ ¿Qué es la Nota Ajustada?", width="medium")
 def mostrar_explicacion_nota_ajustada():
     st.markdown("""
-    La **Nota Ajustada** busca reflejar de manera más justa el **rendimiento real** de cada jugador a lo largo de la temporada.  
-    Tiene en cuenta tanto su **nota media individual** como el **volumen de minutos jugados**, premiando la **regularidad y constancia**.
+    La **Nota Ajustada** busca reflejar de manera más justa el rendimiento real de cada jugador a lo largo de la temporada.  
+    Tiene en cuenta tanto su **nota media individual** como el **volumen de minutos jugados**, premiando la regularidad y constancia.
 
     ---
+
     ### ⚙️ Cómo se calcula
 
     La nota ajustada se compone de dos partes: una **base ponderada** y un **bonus por minutos**.
 
-    **1️⃣ Base ponderada:**
-    \n
-    \t**BASE = (PESO_MINUTOS × NOTA_MEDIA + k × NOTA_GLOBAL) / (PESO_MINUTOS + k)**
+    #### 1️⃣ Base ponderada:
+    **BASE = (PESO_MINUTOS × NOTA_MEDIA + k × NOTA_GLOBAL) / (PESO_MINUTOS + k)**
 
-    **2️⃣ Bonus por minutos jugados:**
-    \n
-    \t**BONUS = γ × (MINUTOS_TOTALES / MINUTOS_MÁXIMO) ^ β**
+    #### 2️⃣ Bonus por minutos jugados:
+    **BONUS = γ × (MINUTOS_TOTALES / MINUTOS_MÁXIMO) ^ β**
 
-    **3️⃣ Nota final:**
-    \n
-    \t**NOTA_AJUSTADA = BASE + BONUS**
+    #### 3️⃣ Nota final:
+    **NOTA_AJUSTADA = BASE + BONUS**
 
     ---
+
     ### 📘 Significado de los parámetros
 
-    - **NOTA_MEDIA:** la media de las notas del jugador en todos los partidos jugados.  
-    - **NOTA_GLOBAL:** media general de todos los jugadores del equipo (sirve de referencia).  
-    - **PESO_MINUTOS:** equivale a los partidos completos jugados, elevado a una potencia `α` para dar más importancia a quienes acumulan más tiempo.  
-      - En este caso, `α = 2`, lo que **aumenta exponencialmente el peso de los jugadores más regulares**.  
-    - **k = 60:** controla cuánto se suaviza el resultado hacia la nota global (cuanto mayor sea, menos diferencia entre jugadores).  
-    - **γ (gamma) = 0.25:** define la **intensidad del bonus** por minutos jugados.  
-    - **β (beta) = 2:** controla la **curvatura del bonus**, haciendo que el efecto crezca más rápido con muchos minutos.
+    - **NOTA_MEDIA** → Promedio de las notas del jugador en todos los partidos que ha disputado.  
+    - **NOTA_GLOBAL** → Media general de todos los jugadores del equipo (sirve como referencia).  
+    - **MINUTOS_TOTALES** → Total de minutos jugados por el jugador durante la temporada.  
+      Cuantos más minutos acumula, más peso tiene su rendimiento.
+    - **MINUTOS_MÁXIMO** → Es el número de minutos del jugador que más ha jugado en el equipo.  
+      Se usa para normalizar el bonus: el que más juega recibe el bonus completo (γ), y el resto una fracción proporcional.  
+    - **PESO_MINUTOS = (MINUTOS_TOTALES / 90) ^ α**  
+      Representa los “partidos equivalentes” jugados por el jugador (minutos ÷ 90),  
+      elevados a una potencia α para **dar más importancia a quienes acumulan más minutos**.  
+      En este caso **α = 2**, por lo que el peso crece de forma **exponencial**, beneficiando a los más constantes.  
+    - **k = 60** → Controla cuánto se suaviza el resultado hacia la media global del equipo.  
+      Cuanto mayor sea, **menos se aleja la nota ajustada de la nota global**.  
+    - **γ (gamma) = 0.25** → Define la intensidad del bonus adicional por minutos jugados.  
+    - **β (beta) = 2** → Ajusta la curvatura del bonus, haciendo que el efecto crezca más rápido con muchos minutos.
 
     ---
+
     ### 🎯 Interpretación
-    - Un jugador con una **nota media ligeramente inferior**, pero **muchos más minutos**, puede superar a otro más brillante pero irregular.  
-    - Un jugador con pocos minutos no queda tan penalizado, pero su peso en la temporada será menor.  
-    - En resumen: **recompensa la constancia y el rendimiento sostenido**.
+
+    - Un jugador con una nota media ligeramente inferior, pero muchos más minutos,  
+      puede superar a otro más brillante pero irregular.  
+    - Un jugador con pocos minutos **no queda penalizado de forma extrema**,  
+      pero su impacto en la temporada será menor.  
+    - En resumen: **la fórmula recompensa la constancia y el rendimiento sostenido**.
 
     ---
+
     ### 🧮 Ejemplo simplificado
-    Si dos defensas tienen notas medias similares (7.6 y 7.5), pero uno ha jugado 1000 minutos más,  
-    la fórmula eleva su nota ajustada final reflejando mejor su **impacto global en la temporada**.
+    Si dos defensas tienen notas medias similares (7.6 y 7.5), pero uno ha jugado 1.000 minutos más,  
+    la fórmula elevará su nota ajustada final, reflejando mejor su **impacto global en la temporada**.
     """)
 
 
