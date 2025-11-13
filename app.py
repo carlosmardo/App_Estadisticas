@@ -17,14 +17,17 @@ def mostrar_explicacion_nota_ajustada():
 
     La nota ajustada se compone de dos partes: una **base ponderada** y un **bonus por minutos**.
 
-    #### 1️⃣ Base ponderada:
-    **BASE = (PESO_MINUTOS × NOTA_MEDIA + k × NOTA_GLOBAL) / (PESO_MINUTOS + k)**
+    **1️⃣ Base ponderada:**
+    \n
+    \t**BASE = (PESO_MINUTOS × NOTA_MEDIA + k × NOTA_GLOBAL) / (PESO_MINUTOS + k)**
 
-    #### 2️⃣ Bonus por minutos jugados:
-    **BONUS = γ × (MINUTOS_TOTALES / MINUTOS_MÁXIMO) ^ β**
+    **2️⃣ Bonus por minutos jugados:**
+    \n
+    \t**BONUS = γ × (MINUTOS_TOTALES / MINUTOS_MÁXIMO) ^ β**
 
-    #### 3️⃣ Nota final:
-    **NOTA_AJUSTADA = BASE + BONUS**
+    **3️⃣ Nota final:**
+    \n
+    \t**NOTA_AJUSTADA = BASE + BONUS**
 
     ---
 
