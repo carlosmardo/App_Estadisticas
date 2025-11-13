@@ -266,7 +266,7 @@ if jugador_sel == "Equipo General":
     fila = {
         "NOMBRE": "Equipo General",
         "PARTIDOS_JUGADOS": df_filtrado["FECHA"].nunique(),
-        "MINUTOS_TOTALES": df_filtrado["MINS_JUGADOS"].sum()
+        "MINUTOS_TOTALES": df_filtrado["MINS_JUGADOS"].sum(),
     }
     partidos = fila["PARTIDOS_JUGADOS"]
 
@@ -303,7 +303,8 @@ else:
     fila = {
         "NOMBRE": jugador_sel,
         "PARTIDOS_JUGADOS": df_j["FECHA"].nunique(),
-        "MINUTOS_TOTALES": df_j["MINS_JUGADOS"].sum()
+        "MINUTOS_TOTALES": df_j["MINS_JUGADOS"].sum(),
+        "PARTIDOS_REALES": (df_j["MINS_JUGADOS"].sum() / 90).round(2)
     }
     partidos = fila["PARTIDOS_JUGADOS"]
 
@@ -313,22 +314,22 @@ else:
         media_global = df_filtrado["NOTA"].mean()
         
         fila.update({"NOTA_MEDIA": round(nota_media,2)})
-        columnas = ["NOMBRE", "NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        columnas = ["NOMBRE", "NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES", "PARTIDOS_REALES"]
 
     elif tipo_stat == "GOLES":
         total = df_j["GOLES"].sum()
         fila.update({"GOLES": total, "GOLES_POR_PARTIDO": calcular_por_partido(total, partidos)})
-        columnas = ["NOMBRE","GOLES","GOLES_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        columnas = ["NOMBRE","GOLES","GOLES_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES", "PARTIDOS_REALES"]
 
     elif tipo_stat == "ASISTENCIAS":
         total = df_j["ASISTENCIAS"].sum()
         fila.update({"ASISTENCIAS": total, "ASISTENCIAS_POR_PARTIDO": calcular_por_partido(total, partidos)})
-        columnas = ["NOMBRE","ASISTENCIAS","ASISTENCIAS_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        columnas = ["NOMBRE","ASISTENCIAS","ASISTENCIAS_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES", "PARTIDOS_REALES"]
 
     elif tipo_stat == "G/A":
         total = df_j["G/A"].sum()
         fila.update({"G/A": total, "G/A_POR_PARTIDO": calcular_por_partido(total, partidos)})
-        columnas = ["NOMBRE","G/A","G/A_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        columnas = ["NOMBRE","G/A","G/A_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES", "PARTIDOS_REALES"]
 
     resumen = pd.DataFrame([fila])[columnas]
 
@@ -391,7 +392,8 @@ for jugador in jugadores_comparar:
     fila = {
         "NOMBRE": jugador,
         "PARTIDOS_JUGADOS": partidos,
-        "MINUTOS_TOTALES": df_j["MINS_JUGADOS"].sum()
+        "MINUTOS_TOTALES": df_j["MINS_JUGADOS"].sum(),
+        "PARTIDOS_REALES": (df_j["MINS_JUGADOS"].sum() / 90).round(2)
     }
 
     if tipo_comparar == "NOTA":
@@ -400,22 +402,22 @@ for jugador in jugadores_comparar:
         media_global = df_filtrado["NOTA"].mean()
         
         fila.update({"NOTA_MEDIA": round(nota_media,2)})
-        columnas = ["NOMBRE", "NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        columnas = ["NOMBRE", "NOTA_MEDIA","PARTIDOS_JUGADOS","MINUTOS_TOTALES", "PARTIDOS_REALES"]
 
     elif tipo_comparar == "GOLES":
         total = df_j["GOLES"].sum()
         fila.update({"GOLES": total, "GOLES_POR_PARTIDO": calcular_por_partido(total, partidos)})
-        columnas = ["NOMBRE","GOLES","GOLES_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        columnas = ["NOMBRE","GOLES","GOLES_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES", "PARTIDOS_REALES"]
 
     elif tipo_comparar == "ASISTENCIAS":
         total = df_j["ASISTENCIAS"].sum()
         fila.update({"ASISTENCIAS": total, "ASISTENCIAS_POR_PARTIDO": calcular_por_partido(total, partidos)})
-        columnas = ["NOMBRE","ASISTENCIAS","ASISTENCIAS_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        columnas = ["NOMBRE","ASISTENCIAS","ASISTENCIAS_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES", "PARTIDOS_REALES"]
 
     elif tipo_comparar == "G/A":
         total = df_j["G/A"].sum()
         fila.update({"G/A": total, "G/A_POR_PARTIDO": calcular_por_partido(total, partidos)})
-        columnas = ["NOMBRE","G/A","G/A_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES"]
+        columnas = ["NOMBRE","G/A","G/A_POR_PARTIDO","PARTIDOS_JUGADOS","MINUTOS_TOTALES", "PARTIDOS_REALES"]
 
     resumen.append(pd.DataFrame([fila])[columnas])
 
@@ -433,18 +435,22 @@ st.header("🏆 Ranking por notas de rendimiento")
 # Parámetros de la fórmula ajustable
 alpha = 2    # Potencia para peso de minutos
 k = 60       # Suavizado hacia la nota global
-gamma = .25  # Intensidad del bonus por minutos
+gamma = 0.25 # Intensidad del bonus por minutos
 beta = 2     # Curvatura del bonus
 media_global = df_filtrado["NOTA"].mean()
 
 # Agrupamos datos base por jugador
 ranking_notas = (
     df_filtrado.groupby("NOMBRE")
-    .agg({"NOTA": "mean", "FECHA": "nunique", "MINS_JUGADOS": "sum"})
+    .agg({
+        "NOTA": "mean",
+        "FECHA": "nunique",
+        "MINS_JUGADOS": "sum"
+    })
     .rename(columns={
         "FECHA": "PARTIDOS_JUGADOS",
         "MINS_JUGADOS": "MINUTOS_TOTALES",
-        "NOTA": "NOTA_MEDIA"
+        "NOTA": "NOTA_MEDIA",
     })
     .reset_index()
 )
@@ -461,12 +467,15 @@ ranking_notas["BASE"] = (
     / (ranking_notas["PESO_MINUTOS"] + k)
 )
 
-# Paso 3: bonus por minutos jugados (normalizado respecto al máximo)
+# Paso 3: bonus por minutos jugados (normalizado respecto al máximo/2)
 ranking_notas["BONUS"] = gamma * (ranking_notas["MINUTOS_TOTALES"] / minutos_max) ** beta
 
 # Paso 4: nota ajustada final
 ranking_notas["NOTA_AJUSTADA"] = (ranking_notas["BASE"] + ranking_notas["BONUS"]).round(2)
 ranking_notas["NOTA_MEDIA"] = ranking_notas["NOTA_MEDIA"].round(2)
+
+# Añadimos columna de partidos reales
+ranking_notas["PARTIDOS_REALES"] = (ranking_notas["MINUTOS_TOTALES"] / 90).round(2)
 
 # -------------------------------
 # Equipo general
@@ -475,11 +484,12 @@ nota_ajustada_equipo = ranking_notas["NOTA_AJUSTADA"].mean().round(2)
 nota_media_equipo = ranking_notas["NOTA_MEDIA"].mean().round(2)
 
 equipo_notas = pd.DataFrame({
+    "POS": ["-"],
     "NOMBRE": ["Equipo General"],
-    "NOTA_MEDIA": [nota_media_equipo],
     "NOTA_AJUSTADA": [nota_ajustada_equipo],
+    "NOTA_MEDIA": [nota_media_equipo],
     "PARTIDOS_JUGADOS": [df_filtrado["FECHA"].nunique()],
-    "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()]
+    "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()],
 })
 
 # -------------------------------
@@ -487,17 +497,17 @@ equipo_notas = pd.DataFrame({
 # -------------------------------
 ranking_jugadores = ranking_notas.sort_values("NOTA_AJUSTADA", ascending=False).reset_index(drop=True)
 ranking_jugadores.insert(0, "POS", range(1, len(ranking_jugadores) + 1))
-equipo_notas.insert(0, "POS", ["-"])
 
-# Reordenar columnas para mostrar
-ranking_jugadores = ranking_jugadores[[
+# Columnas a mostrar
+columnas_equipo = [
     "POS", "NOMBRE", "NOTA_AJUSTADA", "NOTA_MEDIA",
     "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
-]]
-equipo_notas = equipo_notas[[
-    "POS", "NOMBRE", "NOTA_AJUSTADA", "NOTA_MEDIA",
-    "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
-]]
+]
+
+columnas_jugadores = columnas_equipo + ["PARTIDOS_REALES"]
+
+ranking_jugadores = ranking_jugadores[columnas_jugadores]
+equipo_notas = equipo_notas[columnas_equipo]
 
 # -------------------------------
 # Mostrar resultados
@@ -537,6 +547,7 @@ ranking_ofensivo = (
 ranking_ofensivo["GOLES_POR_PARTIDO"] = (ranking_ofensivo["GOLES"] / ranking_ofensivo["PARTIDOS_JUGADOS"]).round(2)
 ranking_ofensivo["ASISTENCIAS_POR_PARTIDO"] = (ranking_ofensivo["ASISTENCIAS"] / ranking_ofensivo["PARTIDOS_JUGADOS"]).round(2)
 ranking_ofensivo["G/A_POR_PARTIDO"] = (ranking_ofensivo["G/A"] / ranking_ofensivo["PARTIDOS_JUGADOS"]).round(2)
+ranking_ofensivo["PARTIDOS_REALES"] = (ranking_ofensivo["MINUTOS_TOTALES"] / 90).round(2)
 
 # Ordenamos jugadores por G/A
 ranking_jugadores_of = ranking_ofensivo.sort_values("G/A", ascending=False).reset_index(drop=True)
@@ -561,13 +572,13 @@ equipo_of = pd.DataFrame({
     "ASISTENCIAS_POR_PARTIDO": [(df_filtrado["ASISTENCIAS"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
     "G/A_POR_PARTIDO": [(df_filtrado["G/A"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
     "PARTIDOS_JUGADOS": [df_filtrado["FECHA"].nunique()],
-    "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()]
+    "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()],
 })
 
 ranking_jugadores_of = ranking_jugadores_of[[
     "POS", "NOMBRE", "G/A", "GOLES", "ASISTENCIAS",
     "GOLES_POR_PARTIDO", "ASISTENCIAS_POR_PARTIDO", "G/A_POR_PARTIDO",
-    "PARTIDOS_JUGADOS", "MINUTOS_TOTALES"
+    "PARTIDOS_JUGADOS", "MINUTOS_TOTALES", "PARTIDOS_REALES"
 ]]
 
 # Mostrar tablas
@@ -581,3 +592,4 @@ st.dataframe(
     hide_index=True,
     height=max(400, len(ranking_jugadores_of)*35+40)
 )
+
