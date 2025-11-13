@@ -38,15 +38,15 @@ def mostrar_explicacion_nota_ajustada():
     - **MINUTOS_TOTALES** → Total de minutos jugados por el jugador durante la temporada.  
       Cuantos más minutos acumula, más peso tiene su rendimiento.
     - **MINUTOS_MÁXIMO** → Es el número de minutos del jugador que más ha jugado en el equipo.  
-      Se usa para normalizar el bonus: el que más juega recibe el bonus completo (γ), y el resto una fracción proporcional.  
-    - **PESO_MINUTOS = (MINUTOS_TOTALES / 90) ^ α**  
-      Representa los “partidos equivalentes” jugados por el jugador (minutos ÷ 90),  
-      elevados a una potencia α para **dar más importancia a quienes acumulan más minutos**.  
-      En este caso **α = 2**, por lo que el peso crece de forma **exponencial**, beneficiando a los más constantes.  
-    - **k = 60** → Controla cuánto se suaviza el resultado hacia la media global del equipo.  
+      Se usa para normalizar el bonus: el que más juega recibe el bonus completo `γ`, y el resto una fracción proporcional.  
+    - **PESO_MINUTOS = (MINUTOS_TOTALES / 90) ^ `α`**  
+      Representa los **“partidos equivalentes”** jugados por el jugador (minutos ÷ 90),  
+      elevados a una potencia `α` para **dar más importancia a quienes acumulan más minutos**.  
+      En este caso **`α = 2`**, por lo que el peso crece de forma **exponencial**, beneficiando a los más constantes.  
+    - **`k = 60`** → Controla cuánto se suaviza el resultado hacia la media global del equipo.  
       Cuanto mayor sea, **menos se aleja la nota ajustada de la nota global**.  
-    - **γ (gamma) = 0.25** → Define la intensidad del bonus adicional por minutos jugados.  
-    - **β (beta) = 2** → Ajusta la curvatura del bonus, haciendo que el efecto crezca más rápido con muchos minutos.
+    - **`γ (gamma) = 0.25`** → Define la intensidad del bonus adicional por minutos jugados.  
+    - **`β (beta) = 2`** → Ajusta la curvatura del bonus, haciendo que el efecto crezca más rápido con muchos minutos.
 
     ---
 
