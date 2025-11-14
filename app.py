@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+
 st.set_page_config(layout="centered")
 
 #Explicación de la Nota Ajustada
@@ -378,7 +379,7 @@ fig2.update_layout(
     title=f"Comparativa de {tipo_comparar} entre jugadores",
     xaxis_title="MESES",
     yaxis_title=tipo_comparar,
-    hovermode="x unified"
+    hovermode="x",
 )
 st.plotly_chart(fig2, use_container_width=True)
 
@@ -585,7 +586,7 @@ ranking_jugadores_of = ranking_jugadores_of[[
 st.markdown("### 🔴 Equipo General")
 st.dataframe(equipo_of, use_container_width=True, hide_index=True)
 
-st.markdown("### 🔵 Jugadores (Posición ordenada según el G/A)")
+st.markdown("### 🔵 Jugadores (Posición ordenada según G/A)")
 st.dataframe(
     ranking_jugadores_of,
     use_container_width=True,

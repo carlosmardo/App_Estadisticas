@@ -153,10 +153,10 @@ FECHA,NOMBRE,COMPETICION,GOLES,ASISTENCIAS,NOTA,MINS_JUGADOS,RIVAL,GOLES_EN_CONT
 09/11/2025,Pedri,Liga,1,2,8.6,82,Bayern,2
 09/11/2025,Ferran Torres,Liga,2,2,8.3,63,Bayern,2
 09/11/2025,Ter Stegen,Liga,2,0,6.5,80,Bayern,2
-09/11/2025,Balde,Liga,2,2,6.8,81,Athletic Club,2
-09/11/2025,Gavi,Liga,0,2,8.7,65,Athletic Club,2
-09/11/2025,Araujo,Liga,0,1,6.3,62,Athletic Club,2
-09/11/2025,Lenglet,Liga,1,2,8.6,89,Athletic Club,2
+16/11/2025,Balde,Liga,2,2,6.8,81,Athletic Club,2
+16/11/2025,Gavi,Liga,0,2,8.7,65,Athletic Club,2
+16/11/2025,Araujo,Liga,0,1,6.3,62,Athletic Club,2
+16/11/2025,Lenglet,Liga,1,2,8.6,89,Athletic Club,2
 16/11/2025,Dembélé,Liga,1,2,5.6,75,Athletic Club,2
 16/11/2025,Ansu Fati,Liga,1,0,5.1,87,Athletic Club,2
 16/11/2025,Kessié,Liga,1,2,6.9,86,Athletic Club,2
@@ -241,7 +241,7 @@ FECHA,NOMBRE,COMPETICION,GOLES,ASISTENCIAS,NOTA,MINS_JUGADOS,RIVAL,GOLES_EN_CONT
 04/01/2026,Gavi,Liga,0,0,7.5,83,Celta,0
 04/01/2026,Ansu Fati,Liga,0,2,7.2,72,Celta,0
 04/01/2026,Jordi Alba,Liga,2,1,6.1,67,Celta,0
-04/01/2026,Balde,Liga,1,1,7.5,61,PSG,2
+11/01/2026,Balde,Liga,1,1,7.5,61,PSG,2
 11/01/2026,Ansu Fati,Liga,2,0,9.6,84,PSG,2
 11/01/2026,Moriba,Liga,2,2,8.0,77,PSG,2
 11/01/2026,Ter Stegen,Liga,1,2,8.5,82,PSG,2
@@ -395,7 +395,7 @@ FECHA,NOMBRE,COMPETICION,GOLES,ASISTENCIAS,NOTA,MINS_JUGADOS,RIVAL,GOLES_EN_CONT
 12/04/2026,Ter Stegen,Liga,1,0,5.9,81,Atletico Madrid,0
 12/04/2026,Lenglet,Liga,1,1,8.3,70,Atletico Madrid,0
 12/04/2026,Jordi Alba,Liga,0,0,5.1,76,Atletico Madrid,0
-12/04/2026,F. De Jong,Liga,1,0,6.6,86,Inter,3
+19/04/2026,F. De Jong,Liga,1,0,6.6,86,Inter,3
 19/04/2026,Gavi,Liga,0,2,5.9,71,Inter,3
 19/04/2026,Lenglet,Liga,2,0,8.3,81,Inter,3
 19/04/2026,Araujo,Liga,0,1,5.9,77,Inter,3
@@ -450,7 +450,7 @@ FECHA,NOMBRE,COMPETICION,GOLES,ASISTENCIAS,NOTA,MINS_JUGADOS,RIVAL,GOLES_EN_CONT
 17/05/2026,Koundé,Champions,1,1,9.3,72,Bayern,3
 17/05/2026,Araujo,Champions,1,1,6.3,63,Bayern,3
 17/05/2026,Dembélé,Champions,2,1,7.9,82,Bayern,3
-17/05/2026,Ilaix Moriba,Champions,0,0,7.4,75,Inter,3
+24/05/2026,Ilaix Moriba,Champions,0,0,7.4,75,Inter,3
 24/05/2026,Araujo,Champions,2,0,5.4,71,Inter,3
 24/05/2026,Koundé,Champions,0,0,5.4,80,Inter,3
 24/05/2026,F. De Jong,Champions,1,1,6.9,90,Inter,3
@@ -582,7 +582,7 @@ FECHA,NOMBRE,COMPETICION,GOLES,ASISTENCIAS,NOTA,MINS_JUGADOS,RIVAL,GOLES_EN_CONT
 09/08/2026,F. De Jong,Copa del Rey,1,0,5.2,88,Bayern,0
 09/08/2026,Lenglet,Copa del Rey,0,1,5.6,63,Bayern,0
 09/08/2026,Jordi Alba,Copa del Rey,1,2,9.0,79,Bayern,0
-09/08/2026,Ilaix Moriba,Copa del Rey,2,1,9.0,78,Inter,0
+16/08/2026,Ilaix Moriba,Copa del Rey,2,1,9.0,78,Inter,0
 16/08/2026,Ter Stegen,Copa del Rey,1,0,9.7,78,Inter,0
 16/08/2026,Ansu Fati,Copa del Rey,1,0,7.1,82,Inter,0
 16/08/2026,Lenglet,Copa del Rey,2,1,7.9,62,Inter,0
@@ -615,9 +615,9 @@ FECHA,NOMBRE,COMPETICION,GOLES,ASISTENCIAS,NOTA,MINS_JUGADOS,RIVAL,GOLES_EN_CONT
 30/08/2026,Araujo,Supercopa,0,1,6.4,88,PSG,1
 30/08/2026,Raphinha,Supercopa,0,2,7.2,60,PSG,1
 30/08/2026,Lenglet,Supercopa,0,0,9.4,85,PSG,1
-30/08/2026,Ferran Torres,Supercopa,0,0,5.2,63,Valencia,3
-30/08/2026,Busquets,Supercopa,0,1,5.8,85,Valencia,3
-30/08/2026,Gavi,Supercopa,0,1,8.2,79,Valencia,3
+06/09/2026,Ferran Torres,Supercopa,0,0,5.2,63,Valencia,3
+06/09/2026,Busquets,Supercopa,0,1,5.8,85,Valencia,3
+06/09/2026,Gavi,Supercopa,0,1,8.2,79,Valencia,3
 06/09/2026,Lewandowski,Supercopa,2,0,5.6,62,Valencia,3
 06/09/2026,Dembélé,Supercopa,1,2,8.0,62,Valencia,3
 06/09/2026,Lenglet,Supercopa,2,0,9.9,87,Valencia,3
