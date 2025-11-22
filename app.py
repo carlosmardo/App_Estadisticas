@@ -380,6 +380,7 @@ fig2.update_layout(
     xaxis_title="MESES",
     yaxis_title=tipo_comparar,
     hovermode="x",
+    #height=600
 )
 st.plotly_chart(fig2, use_container_width=True)
 
@@ -564,14 +565,14 @@ diferencia_total = df_filtrado["GOLES"].sum() - goles_en_contra_total
 equipo_of = pd.DataFrame({
     "POS": ["-"],
     "NOMBRE": ["Equipo General"],
-    "G/A": [df_filtrado["G/A"].sum()],
+    #"G/A": [df_filtrado["G/A"].sum()],
     "GOLES": [df_filtrado["GOLES"].sum()],
-    "ASISTENCIAS": [df_filtrado["ASISTENCIAS"].sum()],
+    #"ASISTENCIAS": [df_filtrado["ASISTENCIAS"].sum()],
     "GOLES_EN_CONTRA": [goles_en_contra_total],
     "DIFERENCIA_GOLES": [diferencia_total],
     "GOLES_POR_PARTIDO": [(df_filtrado["GOLES"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
-    "ASISTENCIAS_POR_PARTIDO": [(df_filtrado["ASISTENCIAS"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
-    "G/A_POR_PARTIDO": [(df_filtrado["G/A"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
+    #"ASISTENCIAS_POR_PARTIDO": [(df_filtrado["ASISTENCIAS"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
+    #"G/A_POR_PARTIDO": [(df_filtrado["G/A"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
     "PARTIDOS_JUGADOS": [df_filtrado["FECHA"].nunique()],
     "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()],
 })
