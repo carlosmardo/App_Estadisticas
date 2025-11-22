@@ -574,7 +574,7 @@ equipo_of = pd.DataFrame({
     #"ASISTENCIAS_POR_PARTIDO": [(df_filtrado["ASISTENCIAS"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
     #"G/A_POR_PARTIDO": [(df_filtrado["G/A"].sum()/df_filtrado["FECHA"].nunique()).round(2)],
     "PARTIDOS_JUGADOS": [df_filtrado["FECHA"].nunique()],
-    "MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()],
+    #"MINUTOS_TOTALES": [df_filtrado["MINS_JUGADOS"].sum()],
 })
 
 ranking_jugadores_of = ranking_jugadores_of[[
