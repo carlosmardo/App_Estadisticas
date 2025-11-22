@@ -235,7 +235,7 @@ if jugador_sel == "Equipo General":
     )
 else:
     df_jugador = df_filtrado[df_filtrado["NOMBRE"]==jugador_sel].sort_values("FECHA")
-    hover_cols = ["COMPETICION", "RIVAL", "GOLES_EN_CONTRA", "GOLES", "ASISTENCIAS", "G/A", "NOTA"]
+    hover_cols = ["COMPETICION", "RIVAL", "GOLES_EN_CONTRA", "GOLES", "ASISTENCIAS", "G/A", "MINS_JUGADOS", "NOTA"]
     fig = px.line(df_jugador, x="FECHA", y=tipo_stat, markers=True)
     fig.update_traces(
         customdata=df_jugador[hover_cols].values,
@@ -246,7 +246,8 @@ else:
             "Goles: %{customdata[3]}<br>" +
             "Asistencias: %{customdata[4]}<br>" +
             "G/A: %{customdata[5]}<br>" +
-            "Nota: %{customdata[6]}"
+            "Mins jugados: %{customdata[6]}<br>" +
+            "Nota: %{customdata[7]}"
         )
     )
 
@@ -357,7 +358,7 @@ tipo_comparar = st.selectbox("Selecciona la estadística a comparar", ["NOTA","G
 fig2 = px.line()
 for j in jugadores_comparar:
     df_temp = df_filtrado[df_filtrado["NOMBRE"] == j].sort_values("FECHA")
-    hover_cols = ["COMPETICION", "RIVAL", "GOLES_EN_CONTRA", "GOLES", "ASISTENCIAS", "G/A", "NOTA"]
+    hover_cols = ["COMPETICION", "RIVAL", "GOLES_EN_CONTRA", "GOLES", "ASISTENCIAS", "G/A", "MINS_JUGADOS","NOTA"]
     fig2.add_scatter(
         x=df_temp["FECHA"],
         y=df_temp[tipo_comparar],
@@ -370,7 +371,8 @@ for j in jugadores_comparar:
             "Goles: %{customdata[3]}<br>" +
             "Asistencias: %{customdata[4]}<br>" +
             "G/A: %{customdata[5]}<br>" +
-            "Nota: %{customdata[6]}"
+            "Mins jugados: %{customdata[6]}<br>" +
+            "Nota: %{customdata[7]}"
         ),
         customdata=df_temp[hover_cols].values
     )
